@@ -1,0 +1,109 @@
+﻿@page "/naznachenies/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактировать назначение</PageTitle>
+
+<h1>Редактировать назначение</h1>
+
+<h2>Назначение</h2>
+<hr />
+@if (Naznachenie is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Naznachenie" OnValidSubmit="UpdateNaznachenie" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Naznachenie.KodDokumenta" value="@Naznachenie.KodDokumenta" />
+                <div class="mb-3">
+                    <label for="nomerdokumenta" class="form-label">Номер документа:</label>
+                    <InputText id="nomerdokumenta" @bind-Value="Naznachenie.NomerDokumenta" class="form-control" />
+                    <ValidationMessage For="() => Naznachenie.NomerDokumenta" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dataregistratsii" class="form-label">Дата регистрации:</label>
+                    <InputDate id="dataregistratsii" @bind-Value="Naznachenie.DataRegistratsii" class="form-control" />
+                    <ValidationMessage For="() => Naznachenie.DataRegistratsii" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datanaznachenia" class="form-label">Дата назначения:</label>
+                    <InputDate id="datanaznachenia" @bind-Value="Naznachenie.DataNaznachenia" class="form-control" />
+                    <ValidationMessage For="() => Naznachenie.DataNaznachenia" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="kodsotrudnika" class="form-label">Код сотрудника:</label>
+                    <InputNumber id="kodsotrudnika" @bind-Value="Naznachenie.KodSotrudnika" class="form-control" />
+                    <ValidationMessage For="() => Naznachenie.KodSotrudnika" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="koddolzhnosti" class="form-label">Код должности:</label>
+                    <InputNumber id="koddolzhnosti" @bind-Value="Naznachenie.KodDolzhnosti" class="form-control" />
+                    <ValidationMessage For="() => Naznachenie.KodDolzhnosti" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/naznachenies?kodsotrudnika=@Naznachenie?.KodSotrudnika">Возврат к списку назначений</a>  @* меняем строку *@
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int KodDokumenta { get; set; }
+
+    [SupplyParameterFromForm]
+    private Naznachenie? Naznachenie { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Naznachenie ??= await context.Naznacheniyas.FirstOrDefaultAsync(m => m.KodDokumenta == KodDokumenta);
+
+        if (Naznachenie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateNaznachenie()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Naznachenie!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!NaznachenieExists(Naznachenie!.KodDokumenta))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+        NavigationManager.NavigateTo("/naznachenies?kodsotrudnika=" + Naznachenie?.KodSotrudnika.ToString()); //
+        //NavigationManager.NavigateTo("/naznachenies");
+    }
+
+    private bool NaznachenieExists(int koddokumenta)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Naznacheniyas.Any(e => e.KodDokumenta == koddokumenta);
+    }
+}

@@ -1,0 +1,63 @@
+﻿@page "/dolzhnosts/delete"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удалить должность</PageTitle>
+
+<h1>Удалить должность</h1>
+
+<p>Вы уверены, что хотите удалить запись?</p>
+<div>
+    <h2>Должность</h2>
+    <hr />
+    @if (dolzhnost is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Название должности</dt>
+            <dd class="col-sm-10">@dolzhnost.NazvanieDolzhnosti</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Льготы</dt>
+            <dd class="col-sm-10">@dolzhnost.Lgoty</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Требования к квалификации</dt>
+            <dd class="col-sm-10">@dolzhnost.TrebovaniyaKvalifikatsii</dd>
+        </dl>
+        <EditForm method="post" Model="dolzhnost" OnValidSubmit="DeleteDolzhnost" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(dolzhnost is null)">Удалить</button> |
+            <a href="/dolzhnosts">Назад к списку должностей</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Dolzhnost? dolzhnost;
+
+    [SupplyParameterFromQuery]
+    private int KodDolzhnosti { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        dolzhnost = await context.Dolzhnosti.FirstOrDefaultAsync(m => m.KodDolzhnosti == KodDolzhnosti);
+
+        if (dolzhnost is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteDolzhnost()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Dolzhnosti.Remove(dolzhnost!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/dolzhnosts");
+    }
+}

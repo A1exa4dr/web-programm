@@ -1,0 +1,43 @@
+﻿@page "/sotrudniks"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Lab2_web.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Список сотрудников</PageTitle>
+
+<h1>Список сотрудников</h1>
+
+<p>
+    <a href="sotrudniks/create">Добавить сотрудника</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Sotrudniki">
+    <PropertyColumn Title="Код сотрудника" Property="sotrudnik => sotrudnik.KodSotrudnika " />
+    <PropertyColumn Title="Фамилия" Property="sotrudnik => sotrudnik.Familiya" />
+    <PropertyColumn Title="Имя" Property="sotrudnik => sotrudnik.Imya" />
+    <PropertyColumn Title="Отчество" Property="sotrudnik => sotrudnik.Otchestvo" />
+    <PropertyColumn Title="Дата приема на работу" Property="sotrudnik => sotrudnik.DataPriemaNaRabotu" />
+    <PropertyColumn Title="Дата рождения" Property="sotrudnik => sotrudnik.DataRozhdeniya" />
+    <PropertyColumn Title="Пол" Property="sotrudnik => sotrudnik.Pol" />
+
+    <TemplateColumn Context="sotrudnik">
+        <a href="@($"naznachenies?kodsotrudnika={sotrudnik.KodSotrudnika}")">Назначения</a> |
+        <a href="@($"sotrudniks/edit?kodsotrudnika={sotrudnik.KodSotrudnika}")">Редактировать</a> |
+        <a href="@($"sotrudniks/details?kodsotrudnika={sotrudnik.KodSotrudnika}")">Детали</a> |
+        <a href="@($"sotrudniks/delete?kodsotrudnika={sotrudnik.KodSotrudnika}")">Удалить</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

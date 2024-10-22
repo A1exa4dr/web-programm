@@ -1,0 +1,99 @@
+﻿@page "/dolzhnosts/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактировать должность</PageTitle>
+
+<h1>Редактировать должность</h1>
+
+<h2>Должность</h2>
+<hr />
+@if (Dolzhnost is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Dolzhnost" OnValidSubmit="UpdateDolzhnost" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Dolzhnost.KodDolzhnosti" value="@Dolzhnost.KodDolzhnosti" />
+                <div class="mb-3">
+                    <label for="nazvaniedolzhnosti" class="form-label">Название должности:</label>
+                    <InputText id="nazvaniedolzhnosti" @bind-Value="Dolzhnost.NazvanieDolzhnosti" class="form-control" />
+                    <ValidationMessage For="() => Dolzhnost.NazvanieDolzhnosti" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="lgoty" class="form-label">Льготы:</label>
+                    <InputText id="lgoty" @bind-Value="Dolzhnost.Lgoty" class="form-control" />
+                    <ValidationMessage For="() => Dolzhnost.Lgoty" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="trebovaniyakvalifikatsii" class="form-label">Требования к квалификации:</label>
+                    <InputText id="trebovaniyakvalifikatsii" @bind-Value="Dolzhnost.TrebovaniyaKvalifikatsii" class="form-control" />
+                    <ValidationMessage For="() => Dolzhnost.TrebovaniyaKvalifikatsii" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/dolzhnosts">Назад к списку должностей</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int KodDolzhnosti { get; set; }
+
+    [SupplyParameterFromForm]
+    private Dolzhnost? Dolzhnost { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Dolzhnost ??= await context.Dolzhnosti.FirstOrDefaultAsync(m => m.KodDolzhnosti == KodDolzhnosti);
+
+        if (Dolzhnost is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateDolzhnost()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Dolzhnost!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!DolzhnostExists(Dolzhnost!.KodDolzhnosti))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/dolzhnosts");
+    }
+
+    private bool DolzhnostExists(int koddolzhnosti)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Dolzhnosti.Any(e => e.KodDolzhnosti == koddolzhnosti);
+    }
+}

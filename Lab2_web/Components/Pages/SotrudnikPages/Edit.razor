@@ -1,0 +1,114 @@
+﻿@page "/sotrudniks/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редактировать сотрудника</PageTitle>
+
+<h1>Редактировать сотрудника</h1>
+
+<h2>Сотрудник</h2>
+<hr />
+@if (Sotrudnik is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Sotrudnik" OnValidSubmit="UpdateSotrudnik" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Sotrudnik.KodSotrudnika" value="@Sotrudnik.KodSotrudnika" />
+                <div class="mb-3">
+                    <label for="familiya" class="form-label">Фамилия:</label>
+                    <InputText id="familiya" @bind-Value="Sotrudnik.Familiya" class="form-control" />
+                    <ValidationMessage For="() => Sotrudnik.Familiya" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="imya" class="form-label">Имя:</label>
+                    <InputText id="imya" @bind-Value="Sotrudnik.Imya" class="form-control" />
+                    <ValidationMessage For="() => Sotrudnik.Imya" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="otchestvo" class="form-label">Отчество:</label>
+                    <InputText id="otchestvo" @bind-Value="Sotrudnik.Otchestvo" class="form-control" />
+                    <ValidationMessage For="() => Sotrudnik.Otchestvo" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datapriemanarabotu" class="form-label">Дата приема на работу:</label>
+                    <InputDate id="datapriemanarabotu" @bind-Value="Sotrudnik.DataPriemaNaRabotu" class="form-control" />
+                    <ValidationMessage For="() => Sotrudnik.DataPriemaNaRabotu" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datarozhdeniya" class="form-label">Дата рождения:</label>
+                    <InputDate id="datarozhdeniya" @bind-Value="Sotrudnik.DataRozhdeniya" class="form-control" />
+                    <ValidationMessage For="() => Sotrudnik.DataRozhdeniya" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="pol" class="form-label">Пол:</label>
+                    <InputText id="pol" @bind-Value="Sotrudnik.Pol" class="form-control" />
+                    <ValidationMessage For="() => Sotrudnik.Pol" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/sotrudniks">Назад к списку сотрудников</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int KodSotrudnika { get; set; }
+
+    [SupplyParameterFromForm]
+    private Sotrudnik? Sotrudnik { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Sotrudnik ??= await context.Sotrudniki.FirstOrDefaultAsync(m => m.KodSotrudnika == KodSotrudnika);
+
+        if (Sotrudnik is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateSotrudnik()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Sotrudnik!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!SotrudnikExists(Sotrudnik!.KodSotrudnika))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/sotrudniks");
+    }
+
+    private bool SotrudnikExists(int kodsotrudnika)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Sotrudniki.Any(e => e.KodSotrudnika == kodsotrudnika);
+    }
+}

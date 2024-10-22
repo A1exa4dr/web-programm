@@ -1,0 +1,77 @@
+﻿@page "/naznachenies/create"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Довавить назначение</PageTitle>
+
+<h1>Довавить назначение</h1>
+
+<h2>Назначение</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Naznachenie" OnValidSubmit="AddNaznachenie" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="nomerdokumenta" class="form-label">Номер документа:</label> 
+                <InputText id="nomerdokumenta" @bind-Value="Naznachenie.NomerDokumenta" class="form-control" /> 
+                <ValidationMessage For="() => Naznachenie.NomerDokumenta" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="dataregistratsii" class="form-label">Дата регистрации:</label> 
+                <InputDate id="dataregistratsii" @bind-Value="Naznachenie.DataRegistratsii" class="form-control" /> 
+                <ValidationMessage For="() => Naznachenie.DataRegistratsii" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datanaznachenia" class="form-label">Дата назначения:</label> 
+                <InputDate id="datanaznachenia" @bind-Value="Naznachenie.DataNaznachenia" class="form-control" /> 
+                <ValidationMessage For="() => Naznachenie.DataNaznachenia" class="text-danger" /> 
+            </div>
+            <div class="mb-3">
+                <input type="hidden" name="Naznachenie.KodSotrudnika" @bind="Naznachenie.KodSotrudnika" class="form-control" />
+                <ValidationMessage For="() => Naznachenie.KodSotrudnika" class="text-danger" />
+            </div>
+            @* <div class="mb-3">
+                <label for="kodsotrudnika" class="form-label">KodSotrudnika:</label> 
+                <InputNumber id="kodsotrudnika" @bind-Value="Naznachenie.KodSotrudnika" class="form-control" /> 
+                <ValidationMessage For="() => Naznachenie.KodSotrudnika" class="text-danger" /> 
+            </div> *@        
+            <div class="mb-3">
+                <label for="koddolzhnosti" class="form-label">Код должности:</label> 
+                <InputNumber id="koddolzhnosti" @bind-Value="Naznachenie.KodDolzhnosti" class="form-control" /> 
+                <ValidationMessage For="() => Naznachenie.KodDolzhnosti" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/naznachenies?kodsotrudnika=@KodSotrudnika">Назад к списку назначений</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int KodSotrudnika { get; set; }
+
+    [SupplyParameterFromForm]
+
+    private Naznachenie Naznachenie { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Naznachenie.KodSotrudnika = KodSotrudnika;
+    }
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddNaznachenie()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Naznacheniyas.Add(Naznachenie);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/naznachenies?kodsotrudnika=" + KodSotrudnika.ToString());
+    }
+}

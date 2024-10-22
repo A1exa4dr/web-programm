@@ -1,0 +1,54 @@
+﻿@page "/dolzhnosts/create"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавить должность</PageTitle>
+
+<h1>Добавить должность</h1>
+
+<h2>Должность</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Dolzhnost" OnValidSubmit="AddDolzhnost" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="nazvaniedolzhnosti" class="form-label">Название должности:</label> 
+                <InputText id="nazvaniedolzhnosti" @bind-Value="Dolzhnost.NazvanieDolzhnosti" class="form-control" /> 
+                <ValidationMessage For="() => Dolzhnost.NazvanieDolzhnosti" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="lgoty" class="form-label">Льготы:</label> 
+                <InputText id="lgoty" @bind-Value="Dolzhnost.Lgoty" class="form-control" /> 
+                <ValidationMessage For="() => Dolzhnost.Lgoty" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="trebovaniyakvalifikatsii" class="form-label">Требования к квалификации:</label> 
+                <InputText id="trebovaniyakvalifikatsii" @bind-Value="Dolzhnost.TrebovaniyaKvalifikatsii" class="form-control" /> 
+                <ValidationMessage For="() => Dolzhnost.TrebovaniyaKvalifikatsii" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/dolzhnosts">Назад к списку должностей</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Dolzhnost Dolzhnost { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddDolzhnost()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Dolzhnosti.Add(Dolzhnost);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/dolzhnosts");
+    }
+}

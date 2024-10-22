@@ -1,0 +1,75 @@
+﻿@page "/sotrudniks/delete"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удалить сотрудника</PageTitle>
+
+<h1>Удалить сотрудника</h1>
+
+<p>Вы уверены, что хотите удалить запись?</p>
+<div>
+    <h2>Сотрудник</h2>
+    <hr />
+    @if (sotrudnik is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Фамилия</dt>
+            <dd class="col-sm-10">@sotrudnik.Familiya</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Имя</dt>
+            <dd class="col-sm-10">@sotrudnik.Imya</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Отчество</dt>
+            <dd class="col-sm-10">@sotrudnik.Otchestvo</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Дата приема на работу</dt>
+            <dd class="col-sm-10">@sotrudnik.DataPriemaNaRabotu</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Дата рождения</dt>
+            <dd class="col-sm-10">@sotrudnik.DataRozhdeniya</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Пол</dt>
+            <dd class="col-sm-10">@sotrudnik.Pol</dd>
+        </dl>
+        <EditForm method="post" Model="sotrudnik" OnValidSubmit="DeleteSotrudnik" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(sotrudnik is null)">Удалить</button> |
+            <a href="/sotrudniks">Назад к списку сотрудников</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Sotrudnik? sotrudnik;
+
+    [SupplyParameterFromQuery]
+    private int KodSotrudnika { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        sotrudnik = await context.Sotrudniki.FirstOrDefaultAsync(m => m.KodSotrudnika == KodSotrudnika);
+
+        if (sotrudnik is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteSotrudnik()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Sotrudniki.Remove(sotrudnik!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/sotrudniks");
+    }
+}

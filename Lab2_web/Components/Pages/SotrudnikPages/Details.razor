@@ -1,0 +1,56 @@
+﻿@page "/sotrudniks/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Детали сотрудника</PageTitle>
+
+<h1>Детали сотрудника</h1>
+
+<div>
+    <h2>Сотрудник</h2>
+    <hr />
+    @if (sotrudnik is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Фамилия</dt>
+            <dd class="col-sm-10">@sotrudnik.Familiya</dd>
+            <dt class="col-sm-2">Имя</dt>
+            <dd class="col-sm-10">@sotrudnik.Imya</dd>
+            <dt class="col-sm-2">Отчество</dt>
+            <dd class="col-sm-10">@sotrudnik.Otchestvo</dd>
+            <dt class="col-sm-2">Дата приема на работу</dt>
+            <dd class="col-sm-10">@sotrudnik.DataPriemaNaRabotu</dd>
+            <dt class="col-sm-2">Дата рождения</dt>
+            <dd class="col-sm-10">@sotrudnik.DataRozhdeniya</dd>
+            <dt class="col-sm-2">Пол</dt>
+            <dd class="col-sm-10">@sotrudnik.Pol</dd>
+        </dl>
+        <div>
+            <a href="@($"/sotrudniks/edit?kodsotrudnika={sotrudnik.KodSotrudnika}")">Редактировать</a> |
+            <a href="@($"/sotrudniks")">Назад к списку сотрудников</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Sotrudnik? sotrudnik;
+
+    [SupplyParameterFromQuery]
+    private int KodSotrudnika { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        sotrudnik = await context.Sotrudniki.FirstOrDefaultAsync(m => m.KodSotrudnika == KodSotrudnika);
+
+        if (sotrudnik is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

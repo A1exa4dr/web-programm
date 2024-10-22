@@ -1,0 +1,222 @@
+﻿@page "/importexcel"
+@rendermode InteractiveServer
+@using ClosedXML.Excel
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@using Microsoft.AspNetCore.Components.Forms;
+
+<PageTitle>Загрузка файла Excel для импорта в базу данных</PageTitle>
+
+<p>
+    <label>
+        Укажите файл Excel для импорта:
+        <InputFile OnChange="LoadFiles" />
+    </label>
+</p>
+@if (isLoading)
+{
+    <p>Загрузка...</p>
+}
+else
+{
+    <ul>
+        <div>Количество импортированных сотрудников: @sotrudnikrefs.Count()</div>
+        <div>Количество импортированных должностей: @dolzhnostrefs.Count()</div>
+        <div>Количество импортированных назначений: @naznachenierefs.Count()</div>
+    </ul>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div>Error: @ErrorMessage</div>
+}
+
+@code {
+    ApplicationDbContext context = default!;
+
+    List<SotrudnikRef> sotrudnikrefs = new List<SotrudnikRef>();
+    List<DolzhnostRef> dolzhnostrefs = new List<DolzhnostRef>();
+    List<NaznachenieRef> naznachenierefs = new List<NaznachenieRef>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public string ErrorMessage { get; set; } = "";
+
+    private long maxFileSize = 1024 * 15;
+    private bool isLoading;
+    string? errworksheet { get; set; }
+    int? errindexrow { get; set; }
+    const int MAX_FILESIZE = 5000 * 1024; // 5 MB
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+
+        var browserFile = e.File;
+        if (browserFile != null)
+        {
+            try
+            {
+                var fileStream = browserFile.OpenReadStream(MAX_FILESIZE);
+
+                var randomFile = Path.GetTempFileName();
+                var extension = Path.GetExtension(browserFile.Name);
+                var targetFilePath = Path.ChangeExtension(randomFile, extension);
+
+                var destinationStream = new FileStream(targetFilePath, FileMode.Create);
+                await fileStream.CopyToAsync(destinationStream);
+
+                await GetDataTableFromExcelAsync(destinationStream);
+
+                destinationStream.Close();
+            }
+            catch (Exception exception)
+            {
+                ErrorMessage = exception.Message;
+            }
+        }
+
+        isLoading = false;
+    }
+
+    public async Task GetDataTableFromExcelAsync(FileStream file)
+    {
+        using (XLWorkbook workbook = new XLWorkbook(file))
+        {
+            errindexrow = 1;
+
+            try
+            {
+                foreach (IXLWorksheet worksheet in workbook.Worksheets)
+                {
+                    errworksheet = worksheet.Name;
+
+                    // Импорт данных отправителей
+                    if (worksheet.Name == "Sotrudnik")
+                    {
+                        foreach (IXLRow row in worksheet.RowsUsed().Skip(1))
+                        {
+                            errindexrow++;
+                            Sotrudnik sotr = new Sotrudnik
+                                {
+                                    Familiya = row.Cell(2).Value.ToString(),
+                                    Imya = row.Cell(3).Value.ToString(),
+                                    Otchestvo = row.Cell(4).Value.ToString(),
+                                    DataPriemaNaRabotu = DateTime.Parse(row.Cell(5).Value.ToString()),
+                                    DataRozhdeniya = DateTime.Parse(row.Cell(6).Value.ToString()),
+                                    Pol = row.Cell(7).Value.ToString(),
+                                };
+
+                            await context.Sotrudniki.AddAsync(sotr);
+                            await context.SaveChangesAsync();
+
+                            sotrudnikrefs.Add(new SotrudnikRef
+                                {
+                                    SotrudnikRefDB = sotr.KodSotrudnika,
+                                    SotrudnikRefExcel = int.Parse(row.Cell(1).Value.ToString())
+                                });
+                        }
+                    }
+
+                    // Импорт данных организаций
+                    else if (worksheet.Name == "Dolzhnost")
+                    {
+                        foreach (IXLRow row in worksheet.RowsUsed().Skip(1))
+                        {
+                            errindexrow++;
+                            Dolzhnost dolzhnost = new Dolzhnost
+                                {
+                                    NazvanieDolzhnosti = row.Cell(2).Value.ToString(),
+                                    Lgoty = row.Cell(3).Value.ToString(),
+                                    TrebovaniyaKvalifikatsii = row.Cell(4).Value.ToString()
+                                };
+
+                            await context.Dolzhnosti.AddAsync(dolzhnost);
+                            await context.SaveChangesAsync();
+
+                            dolzhnostrefs.Add(new DolzhnostRef
+                                {
+                                    DolzhnostRefDB = dolzhnost.KodDolzhnosti,
+                                    DolzhnostRefExcel = int.Parse(row.Cell(1).Value.ToString())
+                                });
+                        }
+                    }
+
+                    // Импорт данных документов
+                    else if (worksheet.Name == "Naznachenia")
+                    {
+                        foreach (IXLRow row in worksheet.RowsUsed().Skip(1))
+                        {
+                            errindexrow++;
+                            Naznachenie document = new Naznachenie
+                                {
+                                    NomerDokumenta = row.Cell(2).Value.ToString(),
+                                    DataRegistratsii = TryParseDate(row.Cell(3).Value.ToString()),
+                                    DataNaznachenia = TryParseDate(row.Cell(4).Value.ToString()),
+                                    KodSotrudnika = int.Parse(row.Cell(5).Value.ToString()),
+                                    KodDolzhnosti = int.Parse(row.Cell(6).Value.ToString())
+                                };
+
+                            await context.Naznacheniyas.AddAsync(document);
+                            await context.SaveChangesAsync();
+
+                            naznachenierefs.Add(new NaznachenieRef
+                                {
+                                    NaznachenieRefDB = document.KodDokumenta,
+                                    NaznachenieRefExcel = int.Parse(row.Cell(1).Value.ToString())
+                                });
+                        }
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                ErrorMessage = $"Ошибка в импорте в таблице {errworksheet}, строка - {errindexrow}";
+                // Очистка данных в случае ошибки
+                ClearDataOnError();
+            }
+        }
+    }
+
+    private void ClearDataOnError()
+    {
+        // Очистка всех данных при ошибке
+        foreach (var sotrudnikRef in sotrudnikrefs)
+        {
+            var sotr = context.Sotrudniki.FirstOrDefault(s => s.KodSotrudnika == sotrudnikRef.SotrudnikRefDB);
+            if (sotr != null) context.Sotrudniki.Remove(sotr);
+            context.SaveChanges();
+        }
+        sotrudnikrefs.Clear();
+
+        foreach (var dolzhnostRef in dolzhnostrefs)
+        {
+            var dolzhnost = context.Dolzhnosti.FirstOrDefault(o => o.KodDolzhnosti == dolzhnostRef.DolzhnostRefDB);
+            if (dolzhnost != null) context.Dolzhnosti.Remove(dolzhnost);
+            context.SaveChanges();
+        }
+        dolzhnostrefs.Clear();
+
+        foreach (var naznachenieRef in naznachenierefs)
+        {
+            var document = context.Naznacheniyas.FirstOrDefault(d => d.KodDokumenta == naznachenieRef.NaznachenieRefDB);
+            if (document != null) context.Naznacheniyas.Remove(document);
+            context.SaveChanges();
+        }
+        naznachenierefs.Clear();
+    }
+
+    // Метод для безопасного преобразования строки в DateTime
+    private DateTime? TryParseDate(string? dateString)
+    {
+        if (DateTime.TryParse(dateString, out DateTime parsedDate))
+        {
+            return parsedDate;
+        }
+        return null;
+    }
+}

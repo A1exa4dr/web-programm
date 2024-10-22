@@ -1,0 +1,78 @@
+﻿@page "/sotrudniks/create"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Добавить сотрудника</PageTitle>
+
+<h1>Добавить сотрудника</h1>
+
+<h2>Сотрудник</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Sotrudnik" OnValidSubmit="AddSotrudnik" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="familiya" class="form-label">Фамилия:</label> 
+                <InputText id="familiya" @bind-Value="Sotrudnik.Familiya" class="form-control" /> 
+                <ValidationMessage For="() => Sotrudnik.Familiya" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="imya" class="form-label">Имя:</label> 
+                <InputText id="imya" @bind-Value="Sotrudnik.Imya" class="form-control" /> 
+                <ValidationMessage For="() => Sotrudnik.Imya" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="otchestvo" class="form-label">Отчество:</label> 
+                <InputText id="otchestvo" @bind-Value="Sotrudnik.Otchestvo" class="form-control" /> 
+                <ValidationMessage For="() => Sotrudnik.Otchestvo" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datapriemanarabotu" class="form-label">Дата приема на работу:</label> 
+                <InputDate id="datapriemanarabotu" @bind-Value="Sotrudnik.DataPriemaNaRabotu" class="form-control" /> 
+                <ValidationMessage For="() => Sotrudnik.DataPriemaNaRabotu" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datarozhdeniya" class="form-label">Дата рождения:</label> 
+                <InputDate id="datarozhdeniya" @bind-Value="Sotrudnik.DataRozhdeniya" class="form-control" /> 
+                <ValidationMessage For="() => Sotrudnik.DataRozhdeniya" class="text-danger" /> 
+            </div>  
+            <div class="mb-3">
+                <label for="pol" class="form-label">Пол:</label> 
+                <InputSelect id="pol" @bind-Value="Sotrudnik.Pol" class="form-control">
+                    <option value="" disabled selected hidden>Выберите пол</option> <!-- Disabled and hidden by default -->
+                    <option value="Мужской">Мужской</option>
+                    <option value="Женский">Женский</option>
+                </InputSelect>
+                <ValidationMessage For="() => Sotrudnik.Pol" class="text-danger" />
+            </div>
+            <!--<div class="mb-3">
+                <label for="pol" class="form-label">Pol:</label> 
+                <InputText id="pol" @bind-Value="Sotrudnik.Pol" class="form-control" /> 
+                <ValidationMessage For="() => Sotrudnik.Pol" class="text-danger" /> 
+            </div>-->      
+            <button type="submit" class="btn btn-primary">Добавить</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/sotrudniks">Назад к списку сотрудников</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Sotrudnik Sotrudnik { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddSotrudnik()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Sotrudniki.Add(Sotrudnik);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/sotrudniks");
+    }
+}

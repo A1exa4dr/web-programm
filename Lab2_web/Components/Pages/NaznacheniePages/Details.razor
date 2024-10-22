@@ -1,0 +1,54 @@
+﻿@page "/naznachenies/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Детали назначения</PageTitle>
+
+<h1>Детали назначения</h1>
+
+<div>
+    <h2>Назначение</h2>
+    <hr />
+    @if (naznachenie is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Номер документа</dt>
+            <dd class="col-sm-10">@naznachenie.NomerDokumenta</dd>
+            <dt class="col-sm-2">Дата регистрации</dt>
+            <dd class="col-sm-10">@naznachenie.DataRegistratsii</dd>
+            <dt class="col-sm-2">Дата назначения</dt>
+            <dd class="col-sm-10">@naznachenie.DataNaznachenia</dd>
+            <dt class="col-sm-2">Код сотрудника</dt>
+            <dd class="col-sm-10">@naznachenie.KodSotrudnika</dd>
+            <dt class="col-sm-2">Код должности</dt>
+            <dd class="col-sm-10">@naznachenie.KodDolzhnosti</dd>
+        </dl>
+        <div>
+            <a href="@($"/naznachenies/edit?koddokumenta={naznachenie.KodDokumenta}")">Редактировать</a> |
+            <a href="/naznachenies?kodsotrudnika=@naznachenie?.KodSotrudnika">Назад к списку назначений</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Naznachenie? naznachenie;
+
+    [SupplyParameterFromQuery]
+    private int KodDokumenta { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        naznachenie = await context.Naznacheniyas.FirstOrDefaultAsync(m => m.KodDokumenta == KodDokumenta);
+
+        if (naznachenie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

@@ -1,0 +1,79 @@
+﻿@page "/naznachenies"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Lab2_web.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Список назначений</PageTitle>
+
+<h1>Список назначений</h1>
+
+<p>
+    <a href="naznachenies/create?kodsotrudnika=@KodSotrudnika">Создать назначение</a>
+</p>
+
+<p>
+    <a href="/sotrudniks">Возврат к списку сотрудников</a>
+</p>
+<QuickGrid Class="table" Items="context.Naznacheniyas.Where(t=>t.KodSotrudnika==KodSotrudnika)">
+    <PropertyColumn Title="Код документа" Property="naznachenie => naznachenie.KodDokumenta"/>
+    <PropertyColumn Title="Номер документа" Property="naznachenie => naznachenie.NomerDokumenta" />
+    <PropertyColumn Title="Дата регистрации" Property="naznachenie => naznachenie.DataRegistratsii" />
+    <PropertyColumn Title="Дата назначения" Property="naznachenie => naznachenie.DataNaznachenia" />
+    <PropertyColumn Title="Код сотрудника" Property="naznachenie => naznachenie.KodSotrudnika" />
+    <PropertyColumn Title="Код должности" Property="naznachenie => naznachenie.KodDolzhnosti" />
+
+    <TemplateColumn Context="naznachenie">
+        <a href="@($"naznachenies/edit?koddokumenta={naznachenie.KodDokumenta}")">Редактировать</a> |
+        <a href="@($"naznachenies/details?koddokumenta={naznachenie.KodDokumenta}")">Детали</a> |
+        <a href="@($"naznachenies/delete?koddokumenta={naznachenie.KodDokumenta}")">Удалить</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int KodSotrudnika { get; set; }
+
+    public string? Familiya { get; set; }
+
+    public string? Imya { get; set; }
+
+    public string? Otchestvo { get; set; }
+
+    public DateTime? DataPriemaNaRabotu { get; set; }
+
+    public DateTime? DataRozhdeniya { get; set; }
+
+    public string? Pol { get; set; }
+
+
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+        if (KodSotrudnika == null)
+        {
+            NavigationManager.NavigateTo("not found");
+        }
+        {
+            Sotrudnik? sotr = context.Sotrudniki.FirstOrDefault(d => d.KodSotrudnika == KodSotrudnika);
+
+            if (sotr == null)
+            {
+                NavigationManager.NavigateTo("not found");
+            }
+
+            Familiya = sotr?.Familiya;
+            Imya = sotr?.Imya;
+            Otchestvo = sotr?.Otchestvo;  /* по идее это всё надо написать, тк оно как я понимаю присваивается QuickGrid */
+            DataPriemaNaRabotu = sotr?.DataPriemaNaRabotu; /* который сверху, но если всё это убрать, то всё равно всё будет работать */
+            DataRozhdeniya = sotr?.DataRozhdeniya; /* для срабатывания сортировки достаточно прописать только это (40-41 строки):  [SupplyParameterFromQuery] ||| public int? SenderId { get; set; } */
+            Pol=sotr?.Pol;                                                                                                        
+        }
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

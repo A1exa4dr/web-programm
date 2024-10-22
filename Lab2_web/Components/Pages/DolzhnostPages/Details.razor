@@ -1,0 +1,50 @@
+﻿@page "/dolzhnosts/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Детали должности</PageTitle>
+
+<h1>Детали должности</h1>
+
+<div>
+    <h2>д=Должности</h2>
+    <hr />
+    @if (dolzhnost is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Название должности</dt>
+            <dd class="col-sm-10">@dolzhnost.NazvanieDolzhnosti</dd>
+            <dt class="col-sm-2">Льготы</dt>
+            <dd class="col-sm-10">@dolzhnost.Lgoty</dd>
+            <dt class="col-sm-2">Требования к квалификации</dt>
+            <dd class="col-sm-10">@dolzhnost.TrebovaniyaKvalifikatsii</dd>
+        </dl>
+        <div>
+            <a href="@($"/dolzhnosts/edit?koddolzhnosti={dolzhnost.KodDolzhnosti}")">Редактироввать</a> |
+            <a href="@($"/dolzhnosts")">Назад к списку должностей</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Dolzhnost? dolzhnost;
+
+    [SupplyParameterFromQuery]
+    private int KodDolzhnosti { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        dolzhnost = await context.Dolzhnosti.FirstOrDefaultAsync(m => m.KodDolzhnosti == KodDolzhnosti);
+
+        if (dolzhnost is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

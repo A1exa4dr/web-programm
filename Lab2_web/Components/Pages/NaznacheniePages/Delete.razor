@@ -1,0 +1,75 @@
+﻿@page "/naznachenies/delete"
+@using Microsoft.EntityFrameworkCore
+@using Lab2_web.Data
+@inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Удалить назначение</PageTitle>
+
+<h1>Удалить назначение</h1>
+
+<p>Вы уверены, что хотите удалить запись?</p>
+<div>
+    <h2>Назначение</h2>
+    <hr />
+    @if (naznachenie is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Номер документа</dt>
+            <dd class="col-sm-10">@naznachenie.NomerDokumenta</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Дата регистрации</dt>
+            <dd class="col-sm-10">@naznachenie.DataRegistratsii</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Дата назначения</dt>
+            <dd class="col-sm-10">@naznachenie.DataNaznachenia</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Код сотрудника</dt>
+            <dd class="col-sm-10">@naznachenie.KodSotrudnika</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Код должности</dt>
+            <dd class="col-sm-10">@naznachenie.KodDolzhnosti</dd>
+        </dl>
+        <EditForm method="post" Model="naznachenie" OnValidSubmit="DeleteNaznachenie" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(naznachenie is null)">Удалить</button> |
+            <a href="/naznachenies?kodsotrudnika=@naznachenie?.KodSotrudnika">Назад к списку назначений</a>
+
+        </EditForm>
+    }
+</div>
+
+@code {
+    int? KodSotrudnika; /* добавляем это для идентификации айди по которому был переход  */
+
+    Naznachenie? naznachenie;
+
+    [SupplyParameterFromQuery]
+    private int KodDokumenta { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        naznachenie = await context.Naznacheniyas.FirstOrDefaultAsync(m => m.KodDokumenta == KodDokumenta);
+
+        if (naznachenie is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+        KodSotrudnika = naznachenie?.KodSotrudnika;///
+    }
+
+    private async Task DeleteNaznachenie()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Naznacheniyas.Remove(naznachenie!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/naznachenies?kodsotrudnika=" + KodSotrudnika.ToString()); //
+    }
+}
