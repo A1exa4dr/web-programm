@@ -1,4 +1,5 @@
 ﻿@page "/sotrudniks/edit"
+@attribute [Authorize(Roles = "Admin")]
 @using Microsoft.EntityFrameworkCore
 @using Lab2_web.Data
 @inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
@@ -49,7 +50,11 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="pol" class="form-label">Пол:</label>
-                    <InputText id="pol" @bind-Value="Sotrudnik.Pol" class="form-control" />
+                    <InputSelect id="pol" @bind-Value="Sotrudnik.Pol" class="form-control">
+                        <option value="" disabled selected hidden>Выберите пол</option> <!-- Disabled and hidden by default -->
+                        <option value="Мужской">Мужской</option>
+                        <option value="Женский">Женский</option>
+                    </InputSelect>
                     <ValidationMessage For="() => Sotrudnik.Pol" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Сохранить</button>

@@ -1,4 +1,5 @@
 ﻿@page "/sotrudniks"
+@attribute [Authorize(Roles = "Employee, Admin")]
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Lab2_web.Data

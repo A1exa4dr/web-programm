@@ -1,4 +1,6 @@
 ﻿@page "/importexcel"
+@attribute [Authorize(Roles = "Admin")]
+
 @rendermode InteractiveServer
 @using ClosedXML.Excel
 @using Microsoft.EntityFrameworkCore

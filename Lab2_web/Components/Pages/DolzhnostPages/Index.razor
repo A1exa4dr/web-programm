@@ -1,7 +1,7 @@
 ﻿@page "/dolzhnosts"
+@attribute [Authorize(Roles = "Employee, Admin")]
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
-@using Lab2_web.Data
 @using Lab2_web.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory
@@ -21,7 +21,9 @@
     <PropertyColumn Title="Требования к квалификации" Property="dolzhnost => dolzhnost.TrebovaniyaKvalifikatsii" />
 
     <TemplateColumn Context="dolzhnost">
+        <AuthorizeView Roles="Admin">
         <a href="@($"dolzhnosts/edit?koddolzhnosti={dolzhnost.KodDolzhnosti}")">Редактировать</a> |
+        </AuthorizeView>
         <a href="@($"dolzhnosts/details?koddolzhnosti={dolzhnost.KodDolzhnosti}")">Детали</a> |
         <a href="@($"dolzhnosts/delete?koddolzhnosti={dolzhnost.KodDolzhnosti}")">Удалить</a>
     </TemplateColumn>

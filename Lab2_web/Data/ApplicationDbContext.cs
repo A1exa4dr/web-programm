@@ -8,6 +8,7 @@ namespace Lab2_web.Data
         public DbSet<Sotrudnik> Sotrudniki { get; set; } = default!;
         public DbSet<Dolzhnost> Dolzhnosti { get; set; } = default!;
         public DbSet<Naznachenie> Naznacheniyas { get; set; } = default!;
+        public DbSet<Gender> Genders { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

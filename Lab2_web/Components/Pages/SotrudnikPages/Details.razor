@@ -1,4 +1,5 @@
 ﻿@page "/sotrudniks/details"
+@attribute [Authorize(Roles = "Employee, Admin")]
 @using Microsoft.EntityFrameworkCore
 @using Lab2_web.Data
 @inject IDbContextFactory<Lab2_web.Data.ApplicationDbContext> DbFactory

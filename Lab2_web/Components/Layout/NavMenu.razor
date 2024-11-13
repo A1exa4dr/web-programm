@@ -17,18 +17,20 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Домашняя страница
             </NavLink>
         </div>
-
+        <AuthorizeView Roles="Employee, Admin">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/sotrudniks">
+            <NavLink class="nav-link" href="sotrudniks">
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Сотрудники
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/dolzhnosts">
+            <NavLink class="nav-link" href="dolzhnosts">
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Должности
             </NavLink>
         </div>
+       </AuthorizeView>
+        <AuthorizeView Roles="Admin">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/exportexcel">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Экспорт
@@ -40,17 +42,18 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Импорт
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+        </AuthorizeView>
+        @* <div class="nav-item px-3">
             <NavLink class="nav-link" href="auth">
                 <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
             </NavLink>
-        </div>
+        </div> *@
 
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Профиль @* @context.User.Identity?.Name *@
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
@@ -71,7 +74,7 @@
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Вход
+                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Авторизация
                     </NavLink>
                 </div>
             </NotAuthorized>
